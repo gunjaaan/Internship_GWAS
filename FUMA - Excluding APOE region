@@ -1,0 +1,28 @@
+#Remove APOE region 
+
+module load 2021 
+
+module load R/4.1.0-foss-2021a 
+R
+
+library(data.table) 
+
+proxy <- fread("allSE_CC.txt",data.table = F) 
+
+# Exclude SNPs on chromosome 19 containing the linkage disequilibrium block of the APOE gene  
+
+`%!in%` <- Negate(`%in%`) 
+
+  
+
+proxy<- proxy[proxy$SNP %!in%  
+
+                         proxy [proxy$chr== 19 & (proxy$Pos>= 45116911 & proxy$Pos<= 46318605), "SNP"],] 
+
+# Write .txt file with the pruned AD sumstats  
+
+write.table(proxy,"all.CC_noAPOE.txt",quote = F, sep = " ", row.names = F, col.names = T) 
+
+# Repeat this for allN_linear.txt to get all.linear_noAPOE 
+
+ 
