@@ -1,0 +1,171 @@
+#Direct AD summary statistics dataset (obtained from Wightman et el.2021) - NMAFallNoUKB23.txt
+
+ 
+#Proxy lifelines dataset: 
+
+#Linear files:- 
+
+#Cyto file 
+
+# Divide N by 4 to weigh proxy summary statistics on the same scale as that of direct GWAS summary statistics. 
+
+awk 'FNR==1 {d=4}{print $1, $2, $3, $4, $5, $6, $7, $8 /d, $10, $11, $12, $13}' cytonoMMSEregenieFull.txt > cyto_edited.txt 
+
+  
+
+# Create SNP column with unique ID in chr: pos:a1_a2 format  
+
+awk -v OFS="" '{if ($4<$5) print $1," ",$1,":",$2,":",$4,"_",$5," ",$3," ",$4," ",$5," ",$6," ",$7," ",$8," ",$9," ",$10," ",$11," ",$12; else print $1," ",$1,":",$2,":",$5,"_",$4," ",$3," ",$4," ",$5," ",$6," ",$7," ",$8," ",$9," ",$10," ",$11," ",$12}'  cyto_edited.txt > cyto_uniqueID.txt 
+
+#Convert 10logP to P (R) 
+
+module load 2021 
+
+module load R/4.1.0-foss-2021a 
+
+require(data.table) 
+
+cyto <- fread("cyto_uniqueID.txt",data.table = F) 
+
+#To convert -log(p) to p 
+
+cyto <- fread("cyto_uniqueID.txt",data.table = F) 
+
+cyto$P <- 10^-(cyto$P) 
+
+#Create MAF column: 
+
+#convert allele frequency column to minor allele frequency for effective sample size calculation below 
+
+cyto$MAF<-ifelse(cyto$A1FREQ > .5, 1-cyto$A1FREQ, cyto$A1FREQ) 
+
+#remove Freq column now that we have created MAF column 
+
+cyto$A1FREQ<-NULL 
+
+write.table(cyto ,"cyto_uniqueID.txt",quote = F, sep = " ", row.names = F, col.names = T) 
+
+  # Change the column name
+sed -i '1s/LOG10P/P/' cyto_uniqueID.txt 
+sed -i '1s/CHROM:GENPOS:ALLELE0ALLELE1/SNP/' cyto_uniqueID.txt 
+
+
+  
+
+#GSA file: 
+
+#same as cyto 
+
+#Divide N by 4 
+
+awk 'FNR==1 {d=4}{print $1, $2, $3, $4, $5, $6, $7, $8 /d, $10, $11, $12, $13}' GSAnoMMSEregenieFull.txt > GSA_edited.txt 
+
+#Create SNP column  
+
+awk -v OFS="" '{if ($4<$5) print $1," ",$1,":",$2,":",$4,"_",$5," ",$3," ",$4," ",$5," ",$6," ",$7," ",$8," ",$9," ",$10," ",$11," ",$12; else print $1," ",$1,":",$2,":",$5,"_",$4," ",$3," ",$4," ",$5," ",$6," ",$7," ",$8," ",$9," ",$10," ",$11," ",$12}'  GSA_edited.txt > GSA_uniqueID.txt 
+
+  
+
+#MAF column 
+
+module load 2021 
+
+module load R/4.1.0-foss-2021a 
+
+#Load libraries 
+
+require(data.table) 
+
+require(dplyr) 
+
+#Read in file 
+
+GSA <- fread("GSA_uniqueID.txt",data.table=FALSE) 
+
+#convert allele frequency column to minor allele frequency for effective sample size calculation below 
+
+GSA$MAF<-ifelse(GSA$A1FREQ > .5, 1-GSA$A1FREQ, GSA$A1FREQ) 
+
+#remove Freq column now that we have created MAF column 
+
+GSA$A1FREQ<-NULL 
+
+#To convert -log(p) to p 
+
+GSA$P <- 10^-(GSA$P) 
+
+write.table(GSA ,"GSA_uniqueID.txt",quote = F, sep = " ", row.names = F, col.names = T) 
+
+#Change the column name 
+
+sed -i '1s/LOG10P/P/' cyto_uniqueID.txt 
+sed -i '1s/CHROM:GENPOS:ALLELE0ALLELE1/SNP/' cyto_uniqueID.txt 
+
+ 
+
+  
+
+#Case-control files: 
+
+#Cyto: 
+
+#Multiply Beta and SE by 2 
+
+awk '{print $1, $2, $3, $4, $5, $6, $7, $8, $10 *2, $11 * 2, $12, $13}' CCcytonoMMSEregenieFull.txt > cytoCC_edited.txt 
+
+#Create SNP column with chr: pos:a1_a2 
+
+awk -v OFS="" '{if ($4<$5) print $1," ",$1,":",$2,":",$4,"_",$5," ",$3," ",$4," ",$5," ",$6," ",$7," ",$8," ",$9," ",$10," ",$11," ",$12; else print $1," ",$1,":",$2,":",$5,"_",$4," ",$3," ",$4," ",$5," ",$6," ",$7," ",$8," ",$9," ",$10," ",$11," ",$12}'  cytoCC_edited.txt > cytoCC_uniqueID.txt 
+
+#GSA: 
+
+#Multiply Beta and SE by 2 
+
+awk '{print $1, $2, $3, $4, $5, $6, $7, $8, $10 *2, $11 * 2, $12, $13}' CCGSAnoMMSEregenieFull.txt > GSACC_edited.txt 
+
+#Create SNP column with chr: pos:a1_a2 
+
+awk -v OFS="" '{if ($4<$5) print $1," ",$1,":",$2,":",$4,"_",$5," ",$3," ",$4," ",$5," ",$6," ",$7," ",$8," ",$9," ",$10," ",$11," ",$12; else print $1," ",$1,":",$2,":",$5,"_",$4," ",$3," ",$4," ",$5," ",$6," ",$7," ",$8," ",$9," ",$10," ",$11," ",$12}'  GSACC_edited.txt > GSACC_uniqueID.txt 
+
+#MAF column 
+
+module load 2021 
+
+module load R/4.1.0-foss-2021a 
+
+#Load libraries 
+
+require(data.table) 
+
+require(dplyr) 
+
+#Read in file 
+
+cyto <- fread("cytoCC_uniqueID.txt",data.table=FALSE) 
+GSA <- fread("GSACC_uniqueID.txt",data.table = FALSE) 
+
+#convert allele frequency column to minor allele frequency for effective sample size calculation below 
+
+cyto$MAF<-ifelse(cyto$A1FREQ > .5, 1-cyto$A1FREQ, cyto$A1FREQ) 
+
+GSA$MAF<-ifelse(GSA$A1FREQ > .5, 1-GSA$A1FREQ, GSA$A1FREQ)
+
+#remove Freq column now that we have created MAF column 
+
+cyto$A1FREQ<-NULL 
+
+GSA$A1FREQ<-NULL
+
+#To convert -log(p) to p 
+
+cyto$P <- 10^-(cyto$P) 
+
+GSA$P <- 10^-(GSA$P) 
+
+write.table(GSA ,"GSACC_uniqueID.txt",quote = F, sep = " ", row.names = F, col.names = T) 
+
+write.table(cyto ,"cytoCC_uniqueID.txt",quote = F, sep = " ", row.names = F, col.names = T) 
+
+ 
+
+#Make sure to change the names of SNP and P column like linear files  
