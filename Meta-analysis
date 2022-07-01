@@ -1,0 +1,322 @@
+#Download METAL 
+
+wget http://csg.sph.umich.edu/abecasis/Metal/download/ 
+
+#Extract file: 
+tar xvzf Linux-metal.tar.gz 
+
+ 
+
+#METALscript for meta-analysis of all case-control files (metalscript_CC.txt) 
+
+SCHEME STDERR 
+
+#First input file :GSACC 
+
+CHROMOSOMELABEL CHROM  
+
+POSITION GENOPOS 
+
+MARKERLABEL SNP 
+
+ALLELELABELS ALLELE0 ALLELE1 
+
+PVALUE P 
+
+EFFECT Beta 
+
+STDERR SE 
+
+PROCESS GSACC_proxy.txt 
+
+  
+
+#Second input file : cytoCC  
+
+CHROMOSOMELABEL CHROM 
+
+POSITION GENOPOS 
+
+MARKERLABEL SNP 
+
+ALLELELABELS ALLELE0 ALLELE1 
+
+PVALUE P 
+
+EFFECT Beta 
+
+STDERR SE 
+
+PROCESS cytoCC_proxy.txt 
+
+  
+
+#Third input file: NMAFALL… 
+
+CHROMOSOMELABEL chr 
+
+POSITION POS 
+
+MARKERLABEL SNP 
+
+ALLELELABELS a2 a1 
+
+PVALUE P 
+
+EFFECT beta 
+
+STDERR se 
+
+PROCESS AD.txt 
+
+  
+
+ AVERAGEFREQ ON 
+
+ MINMAXFREQ ON 
+
+  
+
+OUTFILE METAANALYSIS_CC.TBL 
+
+  
+
+ANALYZE  
+
+  
+
+QUIT 
+
+
+
+ ######METALScript N weighted meta-analysis to combine linear proxy files with the direct AD (metalscript_N.txt) 
+
+#First input file :GSACC 
+
+MARKERLABEL SNP 
+
+ALLELELABELS ALLELE0 ALLELE1 
+
+PVALUE P 
+
+EFFECT Beta 
+
+WEIGHT N 
+
+PROCESS GSA_proxy.txt 
+
+  
+
+#Second input file : cytoCC  
+
+MARKERLABEL SNP 
+
+ALLELELABELS ALLELE0 ALLELE1 
+
+PVALUE P 
+
+EFFECT Beta 
+
+WEIGHT N 
+
+PROCESS cytoCC_proxy.txt 
+
+  
+
+#Third input file: NMAFALL… 
+
+MARKERLABEL SNP 
+
+ALLELELABELS a2 a1 
+
+PVALUE P 
+
+EFFECT beta 
+
+WEIGHT N 
+
+PROCESS AD.txt 
+
+  
+
+OUTFILE METAANALYSIS_N.TBL 
+
+  
+
+ANALYZE  
+
+  
+
+QUIT 
+
+  
+
+###############METALscript for STDERR meta-analysis for proxy linear (metalscript_proxylin.txt): 
+ 
+
+SCHEME STDERR 
+
+#First input file :GSA linear 
+
+MARKERLABEL SNP 
+
+ALLELELABELS ALLELE0 ALLELE1 
+
+PVALUE P 
+
+EFFECT BETA 
+
+STDRR SE 
+
+PROCESS GSA_proxy.txt 
+
+  
+
+#Second input file : cyto linear 
+
+MARKERLABEL SNP 
+
+ALLELELABELS ALLELE0 ALLELE1 
+
+PVALUE P 
+
+EFFECT BETA 
+
+STDRR SE 
+
+PROCESS cyto_proxy.txt 
+
+  
+
+  
+
+OUTFILE METAANALYSIS_proxylin.TBL 
+
+  
+
+ANALYZE  
+
+  
+
+QUIT 
+
+  
+
+##################METALscript N weighted to combine proxy CC files: (metalscript_proxyCC.txt) 
+
+  
+
+#First input file :GSACC 
+
+MARKERLABEL SNP 
+
+ALLELELABELS ALLELE0 ALLELE1 
+
+PVALUE P 
+
+EFFECT Beta 
+
+WEIGHT N 
+
+PROCESS GSACC_proxy.txt 
+
+  
+
+#Second input file : cytoCC  
+
+MARKERLABEL SNP 
+
+ALLELELABELS ALLELE0 ALLELE1 
+
+PVALUE P 
+
+EFFECT Beta 
+
+WEIGHT N 
+
+PROCESS cytoCC_proxy.txt 
+
+  
+
+OUTFILE METAANALYSIS_proxyCC.TBL 
+
+  
+
+ANALYZE  
+
+  
+
+QUIT 
+
+  
+
+#####3Metal.sh :- all CC ###############
+
+#!/bin/bash 
+
+#SBATCH -N 1 
+
+#SBATCH -t 1:00:00 
+
+  
+
+cd $TMPDIR 
+
+  
+
+cp /home/bawneg/Sumstats/generic-metal/metal . 
+
+cp /home/bawneg/Sumstats/meta-analysis/metalscript_CC.txt . 
+
+cp /home/bawneg/Sumstats/meta-analysis/GSACC_proxy.txt . 
+
+cp /home/bawneg/Sumstats/meta-analysis/cytoCC_proxy.txt . 
+
+cp /home/bawneg/Sumstats/meta-analysis/AD.txt . 
+
+  
+
+./metal metalscript_CC.txt 
+
+  
+
+cp *TBL /home/bawneg/Sumstats/meta-analysis 
+
+ 
+
+#Similar for rest of them 
+
+#Metal_N.sh :-  All linear 
+
+#Metal_proxylin.sh :-  proxy linear 
+
+#Metal_proxyCC.sh : proxy CC 
+
+ 
+
+############### File preparation #############################3 
+
+# proxy linear file 
+
+sed ‘s/:/ /g < METALANALYSIS_proxylin.TBL > Metal_proxy.txt 
+
+vi Metal_proxy.txt 
+
+awk '{print $1, $2, $4, $5, $6, $7, $8, $9}' Metal_proxy.txt > proxy_linear.txt 
+
+#use the same method to prepare proxy_CC.txt (METAANALYSIS_CC.TBL), allN_linear.txt (METANALYSIS_N.TBL) and allSE_CC.txt(METAANALYSIS_CC.TBL). 
+
+#Remove X and Y chromosomes from the allSE_CC.txt and allN_linear.txt files 
+
+sed -e '/^X/d' all_CC.txt > all.CC_noX.txt 
+
+sed -e '/^Y/d' all.CC_noX.txt > all.CC_noXY.txt     
+
+  
+sed -e '/^X/d' all_linear.txt > all.linear_noX.txt 
+
+sed -e '/^Y/d' all.linear_noX.txt > all.linear_noXY.txt   
+
+
+#Delete intermediate files 
+
