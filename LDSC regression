@@ -1,0 +1,73 @@
+#Download: 
+
+git clone https://github.com/bulik/ldsc.git 
+
+cd ldsc 
+
+ 
+
+#Munging ######################
+
+# Effective size N for Direct AD file: 
+
+require(data.table) 
+
+AD<- fread("AD_final.txt", data.table=FALSE) 
+
+ Neff <- as.numeric(AD$Net) 
+
+Uni_Neff <- unique(Neff) 
+
+ AD_Neff <- round(sum(Uni_Neff[!is.na(Uni_Neff)])) 
+
+# This gives a value of 725607438 
+
+ 
+
+#munge Direct AD file 
+
+#usage 
+
+module load 2020 
+
+module load Python/2.7.18-GCCcore-9.3.0 
+
+./munge_sumstats.py --sumstats /home/bawneg/Sumstats/munge/AD_final.txt --N  725607483 --out munge_AD --merge-alleles /home/bawneg/Sumstats/munge/w_hm3.snplist 
+
+# For proxy files 
+
+./munge_sumstats.py --sumstats /home/bawneg/Sumstats/munge/AD.proxy_linear.txt --N 42416 --out munge_proxy.linear --merge-alleles w_hm3.snplist 
+
+#Do the same for CC file to create proxy.CC.sumstats.gz 
+
+ 
+
+#LDSC Regression ################################
+
+#linear file #######
+
+./ldsc.py \ 
+
+--rg munge_proxy.linear.sumstats.gz,munge_AD.sumstats.gz \ 
+
+--ref-ld-chr eur_w_ld_chr/ \ 
+
+--w-ld-chr eur_w_ld_chr/ \ 
+
+--out proxy.linear_AD 
+
+less proxy.linear_AD.log 
+
+#CC file #######
+
+./ldsc.py \ 
+
+--rg munge_proxy.CC.sumstats.gz,munge_AD.sumstats.gz \ 
+
+--ref-ld-chr eur_w_ld_chr/ \ 
+
+--w-ld-chr eur_w_ld_chr/ \ 
+
+--out proxy.CC_AD 
+
+less proxy.CC_AD.log 
